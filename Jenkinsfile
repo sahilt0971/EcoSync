@@ -73,7 +73,7 @@ pipeline {
                    echo "========== Running SonarQube Analysis =========="
                    // Requires Docker socket to be available
                    withSonarQubeEnv('SonarQube') {
-                       sh 'docker run --rm --network devops-tools_devops-net -e SONAR_HOST_URL=$SONAR_HOST_URL -e SONAR_LOGIN=$SONAR_AUTH_TOKEN -v "${WORKSPACE}:/usr/src" sonarsource/sonar-scanner-cli'
+                       sh 'docker run --rm --network devops-tool_devops-net -e SONAR_HOST_URL=$SONAR_HOST_URL -e SONAR_LOGIN=$SONAR_AUTH_TOKEN -v "${WORKSPACE}:/usr/src" sonarsource/sonar-scanner-cli'
                    }
                 }
             }
