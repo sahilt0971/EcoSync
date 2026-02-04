@@ -14,33 +14,56 @@ pipeline {
             }
         }
         
-        stage('Tests') {
-            steps {
-                script {
-                    echo "========== Running Tests =========="
-                    
-                    // Node.js Tests simulation
-                    echo "Running Gateway tests..."
-                    echo "PASS: Gateway tests passed"
-                    
-                    echo "Running Atmosphere tests..."
-                    echo "PASS: Atmosphere tests passed"
-                    
-                    echo "Running Ecosystem tests..."
-                    echo "PASS: Ecosystem tests passed"
-                    
-                    echo "Running Web tests..."
-                    echo "PASS: Web tests passed"
-                    
-                    // Python Tests simulation
-                    echo "Running Thermal tests..."
-                    echo "PASS: Thermal tests passed"
-                    
-                    /* REAL COMMANDS (Uncomment when tools are installed)
-                    sh 'npm install && npm test'
-                    sh 'pip install -r requirements.txt && pytest'
-                    */
+        stage('Test Node.js Services') {
+            agent {
+                docker { 
+                    image 'node:18-alpine' 
+                    reuseNode true
                 }
+            }
+            steps {
+                sh '''
+                    echo "========== Testing Node.js Services =========="
+                    # Install and test Gateway
+                    cd services/gateway
+                    npm ci
+                    npm test
+                    
+                    # Install and test Atmosphere
+                    cd ../atmosphere
+                    npm ci
+                    npm test
+                    
+                    # Install and test Ecosystem
+                    cd ../ecosystem
+                    npm ci
+                    npm test
+                    
+                    # Install and test Web
+                    cd ../../apps/web
+                    npm ci
+                    npm test
+                '''
+            }
+        }
+
+        stage('Test Python Services') {
+            agent {
+                docker { 
+                    image 'python:3.9-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    echo "========== Testing Python Services =========="
+                    cd services/thermal
+                    python -m venv venv
+                    . venv/bin/activate
+                    pip install -r requirements.txt
+                    pip install pytest
+                    pytest
+                '''
             }
         }
         
@@ -48,15 +71,10 @@ pipeline {
             steps {
                 script {
                    echo "========== Running SonarQube Analysis =========="
-                   echo "Connecting to SonarQube server..."
-                   echo "Analysis in progress..."
-                   echo "SUCCESS: SonarQube analysis completed"
-                   
-                   /* REAL COMMANDS
+                   // Requires Docker socket to be available
                    withSonarQubeEnv('SonarQube') {
-                       sh 'sonar-scanner'
+                       sh 'docker run --rm -e SONAR_HOST_URL=$SONAR_HOST_URL -e SONAR_LOGIN=$SONAR_AUTH_TOKEN -v "${WORKSPACE}:/usr/src" sonarsource/sonar-scanner-cli'
                    }
-                   */
                 }
             }
         }
@@ -65,25 +83,13 @@ pipeline {
             steps {
                 script {
                     echo "========== Building Docker Images =========="
-                    
-                    echo "Building ${DOCKERHUB_USERNAME}/ecosync-gateway:${IMAGE_TAG}..."
-                    echo "SUCCESS: Gateway image built"
-                    
-                    echo "Building ${DOCKERHUB_USERNAME}/ecosync-atmosphere:${IMAGE_TAG}..."
-                    echo "SUCCESS: Atmosphere image built"
-                    
-                    echo "Building ${DOCKERHUB_USERNAME}/ecosync-thermal:${IMAGE_TAG}..."
-                    echo "SUCCESS: Thermal image built"
-                    
-                    echo "Building ${DOCKERHUB_USERNAME}/ecosync-ecosystem:${IMAGE_TAG}..."
-                    echo "SUCCESS: Ecosystem image built"
-                    
-                    echo "Building ${DOCKERHUB_USERNAME}/ecosync-web:${IMAGE_TAG}..."
-                    echo "SUCCESS: Web image built"
-                    
-                    /* REAL COMMANDS
-                    docker build ...
-                    */
+                    sh '''
+                        docker build -t ${DOCKERHUB_USERNAME}/ecosync-gateway:${IMAGE_TAG} ./services/gateway
+                        docker build -t ${DOCKERHUB_USERNAME}/ecosync-atmosphere:${IMAGE_TAG} ./services/atmosphere
+                        docker build -t ${DOCKERHUB_USERNAME}/ecosync-thermal:${IMAGE_TAG} ./services/thermal
+                        docker build -t ${DOCKERHUB_USERNAME}/ecosync-ecosystem:${IMAGE_TAG} ./services/ecosystem
+                        docker build -t ${DOCKERHUB_USERNAME}/ecosync-web:${IMAGE_TAG} ./apps/web
+                    '''
                 }
             }
         }
@@ -92,25 +98,14 @@ pipeline {
             steps {
                 script {
                     echo "========== Scanning Images with Trivy =========="
-                    
-                    echo "Scanning ${DOCKERHUB_USERNAME}/ecosync-gateway:${IMAGE_TAG}..."
-                    echo "SAFE: No critical vulnerabilities found in Gateway"
-                    
-                    echo "Scanning ${DOCKERHUB_USERNAME}/ecosync-atmosphere:${IMAGE_TAG}..."
-                    echo "SAFE: No critical vulnerabilities found in Atmosphere"
-                    
-                    echo "Scanning ${DOCKERHUB_USERNAME}/ecosync-thermal:${IMAGE_TAG}..."
-                    echo "SAFE: No critical vulnerabilities found in Thermal"
-                    
-                    echo "Scanning ${DOCKERHUB_USERNAME}/ecosync-ecosystem:${IMAGE_TAG}..."
-                    echo "SAFE: No critical vulnerabilities found in Ecosystem"
-                    
-                    echo "Scanning ${DOCKERHUB_USERNAME}/ecosync-web:${IMAGE_TAG}..."
-                    echo "SAFE: No critical vulnerabilities found in Web"
-                    
-                    /* REAL COMMANDS
-                    trivy image ...
-                    */
+                    sh '''
+                        # Run Trivy via Docker
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync-gateway:${IMAGE_TAG}
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync-atmosphere:${IMAGE_TAG}
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync-thermal:${IMAGE_TAG}
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync-ecosystem:${IMAGE_TAG}
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync-web:${IMAGE_TAG}
+                    '''
                 }
             }
         }
@@ -119,21 +114,17 @@ pipeline {
             steps {
                 script {
                     echo "========== Deploying to DockerHub =========="
-                    echo "Logging in to DockerHub as ${DOCKERHUB_USERNAME}..."
-                    echo "SUCCESS: Login succeeded"
-                    
-                    echo "Pushing images..."
-                    echo "SUCCESS: Pushed ecosync-gateway:${IMAGE_TAG}"
-                    echo "SUCCESS: Pushed ecosync-atmosphere:${IMAGE_TAG}"
-                    echo "SUCCESS: Pushed ecosync-thermal:${IMAGE_TAG}"
-                    echo "SUCCESS: Pushed ecosync-ecosystem:${IMAGE_TAG}"
-                    echo "SUCCESS: Pushed ecosync-web:${IMAGE_TAG}"
-                    
-                    echo "SUCCESS: All images deployed to DockerHub"
-                    
-                    /* REAL COMMANDS
-                    docker push ...
-                    */
+                    sh '''
+                        echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                        
+                        docker push ${DOCKERHUB_USERNAME}/ecosync-gateway:${IMAGE_TAG}
+                        docker push ${DOCKERHUB_USERNAME}/ecosync-atmosphere:${IMAGE_TAG}
+                        docker push ${DOCKERHUB_USERNAME}/ecosync-thermal:${IMAGE_TAG}
+                        docker push ${DOCKERHUB_USERNAME}/ecosync-ecosystem:${IMAGE_TAG}
+                        docker push ${DOCKERHUB_USERNAME}/ecosync-web:${IMAGE_TAG}
+                        
+                        docker logout
+                    '''
                 }
             }
         }
