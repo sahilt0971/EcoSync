@@ -1,0 +1,17 @@
+{
+  "name": "ecosync-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev:gateway": "workspace services/gateway run dev",
+    "dev:atmosphere": "workspace services/atmosphere run dev",
+    "dev:web": "workspace apps/web run dev"
+  },
+  "dependencies": {
+    "axios": "^1.13.4"
+  }
+}

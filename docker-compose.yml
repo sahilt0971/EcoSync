@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  gateway:
+    build: ./services/gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - ATMOSPHERE_URL=http://atmosphere:3001
+      - THERMAL_URL=http://thermal:8000
+      - ECOSYSTEM_URL=http://ecosystem:3002
+    depends_on:
+      - atmosphere
+      - thermal
+      - ecosystem
+
+  atmosphere:
+    build: ./services/atmosphere
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+
+  thermal:
+    build: ./services/thermal
+    ports:
+      - "8000:8000"
+
+  ecosystem:
+    build: ./services/ecosystem
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+
+  web:
+    build: 
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
