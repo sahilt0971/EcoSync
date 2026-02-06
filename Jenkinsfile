@@ -88,10 +88,12 @@ pipeline {
                            docker run --rm --network devops-tool_devops-net \
                            -e SONAR_HOST_URL=$SONAR_HOST_URL \
                            -v "${WORKSPACE}:/usr/src" \
+                           -w /usr/src \
                            sonarsource/sonar-scanner-cli \
                            $SC_AUTH_ARGS \
                            -Dsonar.projectKey=EcoSync \
                            -Dsonar.projectName=EcoSync \
+                           -Dsonar.projectBaseDir=/usr/src \
                            -Dsonar.sources=. \
                            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/dist/**,**/.git/**,**/venv/**,**/__pycache__/**
                        '''
