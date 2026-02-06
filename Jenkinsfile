@@ -68,36 +68,37 @@ pipeline {
         }
         
         stage('SonarQube Analysis') {
+            agent {
+                docker {
+                    image 'sonarsource/sonar-scanner-cli'
+                    reuseNode true
+                    args '--network devops-tool_devops-net'
+                }
+            }
             steps {
                 script {
-                   echo "========== Running SonarQube Analysis =========="
-                   // Requires Docker socket to be available
-                   withSonarQubeEnv('SonarQube') {
-                       sh '''
-                           # Determine authentication parameters
-                           SC_AUTH_ARGS=""
-                           if [ -n "$SONAR_AUTH_TOKEN" ]; then
-                               SC_AUTH_ARGS="-Dsonar.login=$SONAR_AUTH_TOKEN"
-                           elif [ -n "$SONAR_LOGIN" ]; then
-                               SC_AUTH_ARGS="-Dsonar.login=$SONAR_LOGIN"
-                               if [ -n "$SONAR_PASSWORD" ]; then
-                                   SC_AUTH_ARGS="$SC_AUTH_ARGS -Dsonar.password=$SONAR_PASSWORD"
-                               fi
-                           fi
-
-                           docker run --rm --network devops-tool_devops-net \
-                           -e SONAR_HOST_URL=$SONAR_HOST_URL \
-                           -v "${WORKSPACE}:/usr/src" \
-                           -w /usr/src \
-                           sonarsource/sonar-scanner-cli \
-                           $SC_AUTH_ARGS \
-                           -Dsonar.projectKey=EcoSync \
-                           -Dsonar.projectName=EcoSync \
-                           -Dsonar.projectBaseDir=/usr/src \
-                           -Dsonar.sources=. \
-                           -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/dist/**,**/.git/**,**/venv/**,**/__pycache__/**
-                       '''
-                   }
+                    echo "========== Running SonarQube Analysis =========="
+                    withSonarQubeEnv('SonarQube') {
+                        sh '''
+                            # Determine authentication parameters
+                            SC_AUTH_ARGS=""
+                            if [ -n "$SONAR_AUTH_TOKEN" ]; then
+                                SC_AUTH_ARGS="-Dsonar.login=$SONAR_AUTH_TOKEN"
+                            elif [ -n "$SONAR_LOGIN" ]; then
+                                SC_AUTH_ARGS="-Dsonar.login=$SONAR_LOGIN"
+                                if [ -n "$SONAR_PASSWORD" ]; then
+                                    SC_AUTH_ARGS="$SC_AUTH_ARGS -Dsonar.password=$SONAR_PASSWORD"
+                                fi
+                            fi
+                            
+                            sonar-scanner \
+                            $SC_AUTH_ARGS \
+                            -Dsonar.projectKey=EcoSync \
+                            -Dsonar.projectName=EcoSync \
+                            -Dsonar.sources=. \
+                            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/dist/**,**/.git/**,**/venv/**,**/__pycache__/**
+                        '''
+                    }
                 }
             }
         }
