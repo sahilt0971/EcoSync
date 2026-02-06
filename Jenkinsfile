@@ -74,13 +74,22 @@ pipeline {
                    // Requires Docker socket to be available
                    withSonarQubeEnv('SonarQube') {
                        sh '''
+                           # Determine authentication parameters
+                           SC_AUTH_ARGS=""
+                           if [ -n "$SONAR_AUTH_TOKEN" ]; then
+                               SC_AUTH_ARGS="-Dsonar.login=$SONAR_AUTH_TOKEN"
+                           elif [ -n "$SONAR_LOGIN" ]; then
+                               SC_AUTH_ARGS="-Dsonar.login=$SONAR_LOGIN"
+                               if [ -n "$SONAR_PASSWORD" ]; then
+                                   SC_AUTH_ARGS="$SC_AUTH_ARGS -Dsonar.password=$SONAR_PASSWORD"
+                               fi
+                           fi
+
                            docker run --rm --network devops-tool_devops-net \
                            -e SONAR_HOST_URL=$SONAR_HOST_URL \
-                           -e SONAR_LOGIN=$SONAR_LOGIN \
-                           -e SONAR_PASSWORD=$SONAR_PASSWORD \
-                           -e SONAR_TOKEN=$SONAR_AUTH_TOKEN \
                            -v "${WORKSPACE}:/usr/src" \
                            sonarsource/sonar-scanner-cli \
+                           $SC_AUTH_ARGS \
                            -Dsonar.projectKey=EcoSync \
                            -Dsonar.projectName=EcoSync \
                            -Dsonar.sources=. \
