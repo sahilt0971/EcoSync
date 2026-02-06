@@ -105,11 +105,11 @@ pipeline {
                 script {
                     echo "========== Building Docker Images =========="
                     sh '''
-                        docker build -t ${DOCKERHUB_USERNAME}/ecosync-gateway:${IMAGE_TAG} ./services/gateway
-                        docker build -t ${DOCKERHUB_USERNAME}/ecosync-atmosphere:${IMAGE_TAG} ./services/atmosphere
-                        docker build -t ${DOCKERHUB_USERNAME}/ecosync-thermal:${IMAGE_TAG} ./services/thermal
-                        docker build -t ${DOCKERHUB_USERNAME}/ecosync-ecosystem:${IMAGE_TAG} ./services/ecosystem
-                        docker build -t ${DOCKERHUB_USERNAME}/ecosync-web:${IMAGE_TAG} ./apps/web
+                        docker build -t ${DOCKERHUB_USERNAME}/ecosync:gateway-${IMAGE_TAG} ./services/gateway
+                        docker build -t ${DOCKERHUB_USERNAME}/ecosync:atmosphere-${IMAGE_TAG} ./services/atmosphere
+                        docker build -t ${DOCKERHUB_USERNAME}/ecosync:thermal-${IMAGE_TAG} ./services/thermal
+                        docker build -t ${DOCKERHUB_USERNAME}/ecosync:ecosystem-${IMAGE_TAG} ./services/ecosystem
+                        docker build -t ${DOCKERHUB_USERNAME}/ecosync:web-${IMAGE_TAG} ./apps/web
                     '''
                 }
             }
@@ -121,11 +121,11 @@ pipeline {
                     echo "========== Scanning Images with Trivy =========="
                     sh '''
                         # Run Trivy via Docker
-                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync-gateway:${IMAGE_TAG}
-                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync-atmosphere:${IMAGE_TAG}
-                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync-thermal:${IMAGE_TAG}
-                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync-ecosystem:${IMAGE_TAG}
-                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync-web:${IMAGE_TAG}
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync:gateway-${IMAGE_TAG}
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync:atmosphere-${IMAGE_TAG}
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync:thermal-${IMAGE_TAG}
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync:ecosystem-${IMAGE_TAG}
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ${DOCKERHUB_USERNAME}/ecosync:web-${IMAGE_TAG}
                     '''
                 }
             }
@@ -138,11 +138,11 @@ pipeline {
                     sh '''
                         echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
                         
-                        docker push ${DOCKERHUB_USERNAME}/ecosync-gateway:${IMAGE_TAG}
-                        docker push ${DOCKERHUB_USERNAME}/ecosync-atmosphere:${IMAGE_TAG}
-                        docker push ${DOCKERHUB_USERNAME}/ecosync-thermal:${IMAGE_TAG}
-                        docker push ${DOCKERHUB_USERNAME}/ecosync-ecosystem:${IMAGE_TAG}
-                        docker push ${DOCKERHUB_USERNAME}/ecosync-web:${IMAGE_TAG}
+                        docker push ${DOCKERHUB_USERNAME}/ecosync:gateway-${IMAGE_TAG}
+                        docker push ${DOCKERHUB_USERNAME}/ecosync:atmosphere-${IMAGE_TAG}
+                        docker push ${DOCKERHUB_USERNAME}/ecosync:thermal-${IMAGE_TAG}
+                        docker push ${DOCKERHUB_USERNAME}/ecosync:ecosystem-${IMAGE_TAG}
+                        docker push ${DOCKERHUB_USERNAME}/ecosync:web-${IMAGE_TAG}
                         
                         docker logout
                     '''
