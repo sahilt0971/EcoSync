@@ -20,11 +20,6 @@ let state = {
 // Redis Client for Pub/Sub (Optional for now, but good for future)
 // const client = redis.createClient({ url: process.env.REDIS_URL });
 
-// Simulation Loop
-setInterval(() => {
-    // Natural degradation or stabilization logic could go here
-    // For now, it just holds state unless intervened
-}, 1000);
 
 app.get('/status', (req, res) => {
     res.json(state);
@@ -53,6 +48,12 @@ app.post('/intervene', (req, res) => {
 });
 
 if (require.main === module) {
+    // Simulation Loop
+    setInterval(() => {
+        // Natural degradation or stabilization logic could go here
+        // For now, it just holds state unless intervened
+    }, 1000);
+
     app.listen(PORT, () => {
         console.log(`Atmosphere Service running on port ${PORT}`);
     });
