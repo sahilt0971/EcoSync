@@ -61,8 +61,7 @@ pipeline {
                     python -m venv venv
                     . venv/bin/activate
                     pip install -r requirements.txt
-                    pip install pytest
-                    pytest
+                    pytest --cov=. --cov-report=xml
                 '''
             }
         }
@@ -96,7 +95,9 @@ pipeline {
                             -Dsonar.projectKey=EcoSync \
                             -Dsonar.projectName=EcoSync \
                             -Dsonar.sources=. \
-                            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/dist/**,**/.git/**,**/venv/**,**/__pycache__/**
+                            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/dist/**,**/.git/**,**/venv/**,**/__pycache__/** \
+                            -Dsonar.javascript.lcov.reportPaths=services/gateway/coverage/lcov.info,services/atmosphere/coverage/lcov.info,services/ecosystem/coverage/lcov.info,apps/web/coverage/lcov.info \
+                            -Dsonar.python.coverage.reportPaths=services/thermal/coverage.xml
                         '''
                     }
                 }
