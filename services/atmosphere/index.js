@@ -52,6 +52,10 @@ app.post('/intervene', (req, res) => {
     res.json({ message: 'Intervention successful', newState: state });
 });
 
-app.listen(PORT, () => {
-    console.log(`Atmosphere Service running on port ${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Atmosphere Service running on port ${PORT}`);
+    });
+}
+
+module.exports = app;
