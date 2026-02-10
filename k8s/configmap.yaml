@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecosync-config
+  namespace: ecosync
+data:
+  ATMOSPHERE_URL: "http://atmosphere:3001"
+  THERMAL_URL: "http://thermal:8000"
+  ECOSYSTEM_URL: "http://ecosystem:3002"
+  ATMOSPHERE_PORT: "3001"
+  ECOSYSTEM_PORT: "3002"
+  VITE_API_URL: "http://gateway:3000"
