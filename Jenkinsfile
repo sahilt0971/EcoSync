@@ -163,11 +163,11 @@ pipeline {
                 script {
                     echo "========== Updating K8s Manifests =========="
                     sh """
-                        sed -i 's|gateway:.*|gateway:${IMAGE_TAG}|g' k8s/deployments.yaml
-                        sed -i 's|atmosphere:.*|atmosphere:${IMAGE_TAG}|g' k8s/deployments.yaml
-                        sed -i 's|thermal:.*|thermal:${IMAGE_TAG}|g' k8s/deployments.yaml
-                        sed -i 's|ecosystem:.*|ecosystem:${IMAGE_TAG}|g' k8s/deployments.yaml
-                        sed -i 's|web:.*|web:${IMAGE_TAG}|g' k8s/deployments.yaml
+                        sed -i 's|gateway-.*|gateway-${IMAGE_TAG}|g' k8s/deployments.yaml
+                        sed -i 's|atmosphere-.*|atmosphere-${IMAGE_TAG}|g' k8s/deployments.yaml
+                        sed -i 's|thermal-.*|thermal-${IMAGE_TAG}|g' k8s/deployments.yaml
+                        sed -i 's|ecosystem-.*|ecosystem-${IMAGE_TAG}|g' k8s/deployments.yaml
+                        sed -i 's|web-.*|web-${IMAGE_TAG}|g' k8s/deployments.yaml
                     """
                     
                     withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
@@ -175,8 +175,12 @@ pipeline {
                             git config user.email "sahilt0971@gmail.com"
                             git config user.name "sahilt0971"
                             git add k8s/deployments.yaml
-                            git commit -m "Update image tags to ${IMAGE_TAG} [skip ci]"
-                            git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/EcoSync.git HEAD:main
+                            if ! git diff-index --quiet HEAD; then
+                                git commit -m "Update image tags to ${IMAGE_TAG} [skip ci]"
+                                git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/EcoSync.git HEAD:main
+                            else
+                                echo "No changes to commit"
+                            fi
                         """
                     }
                 }
