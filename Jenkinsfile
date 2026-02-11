@@ -5,6 +5,7 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         DOCKERHUB_USERNAME = 'sahilll22'
         IMAGE_TAG = "${BUILD_NUMBER}"
+        SONAR_SCANNER_OPTS = "-Xmx4096m"
     }
     
     stages {
@@ -69,7 +70,7 @@ pipeline {
         stage('SonarQube Analysis') {
             agent {
                 docker {
-                    image 'sonarsource/sonar-scanner-cli'
+                    image 'sonarsource/sonar-scanner-cli:5.0.1'
                     reuseNode true
                     args '--network devops-tool_devops-net'
                 }
@@ -77,6 +78,7 @@ pipeline {
             steps {
                 script {
                     echo "========== Running SonarQube Analysis =========="
+                    sh 'rm -rf .scannerwork'
                     withSonarQubeEnv('SonarQube') {
                         sh '''
                             # Determine authentication parameters
@@ -97,7 +99,9 @@ pipeline {
                             -Dsonar.sources=. \
                             -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/dist/**,**/.git/**,**/venv/**,**/__pycache__/** \
                             -Dsonar.javascript.lcov.reportPaths=services/gateway/coverage/lcov.info,services/atmosphere/coverage/lcov.info,services/ecosystem/coverage/lcov.info,apps/web/coverage/lcov.info \
-                            -Dsonar.python.coverage.reportPaths=services/thermal/coverage.xml
+                            -Dsonar.python.coverage.reportPaths=services/thermal/coverage.xml \
+                            -Dsonar.javascript.nodebridge.timeout=600 \
+                            -Dsonar.javascript.node.maxspace=4096
                         '''
                     }
                 }
@@ -150,6 +154,31 @@ pipeline {
                         
                         docker logout
                     '''
+                }
+            }
+        }
+
+        stage('Update K8s Manifests') {
+            steps {
+                script {
+                    echo "========== Updating K8s Manifests =========="
+                    sh """
+                        sed -i 's/gateway-[^ \"\\']*/gateway-${IMAGE_TAG}/g' k8s/deployments.yaml
+                        sed -i 's/atmosphere-[^ \"\\']*/atmosphere-${IMAGE_TAG}/g' k8s/deployments.yaml
+                        sed -i 's/thermal-[^ \"\\']*/thermal-${IMAGE_TAG}/g' k8s/deployments.yaml
+                        sed -i 's/ecosystem-[^ \"\\']*/ecosystem-${IMAGE_TAG}/g' k8s/deployments.yaml
+                        sed -i 's/web-[^ \"\\']*/web-${IMAGE_TAG}/g' k8s/deployments.yaml
+                    """
+                    
+                    withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                        sh """
+                            git config user.email "sahilt0971@gmail.com"
+                            git config user.name "sahilt0971"
+                            git add k8s/deployments.yaml
+                            git commit -m "Update image tags to ${IMAGE_TAG} [skip ci]"
+                            git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/EcoSync.git HEAD:main
+                        """
+                    }
                 }
             }
         }

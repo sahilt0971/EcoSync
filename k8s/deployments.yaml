@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: atmosphere
-        image: ecosync-atmosphere:latest
+        image: sahilll22/ecosync:atmosphere-BUILD_NUMBER
         ports:
         - containerPort: 3001
         env:
@@ -42,7 +42,7 @@ spec:
     spec:
       containers:
       - name: ecosystem
-        image: ecosync-ecosystem:latest
+        image: sahilll22/ecosync:ecosystem-BUILD_NUMBER
         ports:
         - containerPort: 3002
         env:
@@ -69,7 +69,7 @@ spec:
     spec:
       containers:
       - name: thermal
-        image: ecosync-thermal:latest
+        image: sahilll22/ecosync:thermal-BUILD_NUMBER
         ports:
         - containerPort: 8000
 ---
@@ -90,7 +90,7 @@ spec:
     spec:
       containers:
       - name: gateway
-        image: ecosync-gateway:latest
+        image: sahilll22/ecosync:gateway-BUILD_NUMBER
         ports:
         - containerPort: 3000
         env:
@@ -127,7 +127,7 @@ spec:
     spec:
       containers:
       - name: web
-        image: ecosync-web:latest
+        image: sahilll22/ecosync:web-BUILD_NUMBER
         ports:
         - containerPort: 5173
         env:
