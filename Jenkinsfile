@@ -163,11 +163,11 @@ pipeline {
                 script {
                     echo "========== Updating K8s Manifests =========="
                     sh """
-                        sed -i 's/gateway-[^ \"\\']*/gateway-${IMAGE_TAG}/g' k8s/deployments.yaml
-                        sed -i 's/atmosphere-[^ \"\\']*/atmosphere-${IMAGE_TAG}/g' k8s/deployments.yaml
-                        sed -i 's/thermal-[^ \"\\']*/thermal-${IMAGE_TAG}/g' k8s/deployments.yaml
-                        sed -i 's/ecosystem-[^ \"\\']*/ecosystem-${IMAGE_TAG}/g' k8s/deployments.yaml
-                        sed -i 's/web-[^ \"\\']*/web-${IMAGE_TAG}/g' k8s/deployments.yaml
+                        sed -i 's|gateway:.*|gateway:${IMAGE_TAG}|g' k8s/deployments.yaml
+                        sed -i 's|atmosphere:.*|atmosphere:${IMAGE_TAG}|g' k8s/deployments.yaml
+                        sed -i 's|thermal:.*|thermal:${IMAGE_TAG}|g' k8s/deployments.yaml
+                        sed -i 's|ecosystem:.*|ecosystem:${IMAGE_TAG}|g' k8s/deployments.yaml
+                        sed -i 's|web:.*|web:${IMAGE_TAG}|g' k8s/deployments.yaml
                     """
                     
                     withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
